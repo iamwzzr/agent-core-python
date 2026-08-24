@@ -20,9 +20,7 @@ def test_register_and_list_tool() -> None:
 
     registry.register("add", "Add two integers", add)
 
-    assert registry.list_tools() == [
-        {"name": "add", "description": "Add two integers"}
-    ]
+    assert registry.list_tools() == [{"name": "add", "description": "Add two integers"}]
 
 
 def test_call_add_tool() -> None:
