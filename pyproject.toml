@@ -7,7 +7,9 @@ authors = [
     { name = "iamwzzr", email = "302461164+iamwzzr@users.noreply.github.com" }
 ]
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+    "pydantic>=2.13.4",
+]
 
 [project.scripts]
 agent-core-python = "agent_core_python:main"
