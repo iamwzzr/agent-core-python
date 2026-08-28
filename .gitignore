@@ -11,3 +11,6 @@ wheels/
 
 # Test coverage
 .coverage
+
+# macOS metadata
+.DS_Store

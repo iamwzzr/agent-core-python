@@ -1,7 +1,7 @@
 [project]
 name = "agent-core-python"
 version = "0.1.0"
-description = "Add your description here"
+description = "A minimal typed Python registry for schema-validated agent tools"
 readme = "README.md"
 authors = [
     { name = "iamwzzr", email = "302461164+iamwzzr@users.noreply.github.com" }
