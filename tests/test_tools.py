@@ -2,7 +2,7 @@ from collections.abc import Callable
 from typing import cast
 
 import pytest
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, ValidationError
 
 from agent_core_python.tools import (
     DuplicateToolError,
@@ -175,3 +175,54 @@ def test_register_rejects_non_callable_function() -> None:
             invalid_function,
             AddArguments,
         )
+
+
+def test_empty_registry_lists_no_tools() -> None:
+    registry = ToolRegistry()
+
+    assert registry.list_tools() == []
+
+
+def test_list_tools_preserves_registration_order() -> None:
+    registry = ToolRegistry()
+
+    registry.register(
+        "add",
+        "Add two integers",
+        add,
+        AddArguments,
+    )
+    registry.register(
+        "word_count",
+        "Count words in text",
+        word_count,
+        WordCountArguments,
+    )
+
+    listed_tools = registry.list_tools()
+
+    assert [(tool["name"], tool["description"]) for tool in listed_tools] == [
+        ("add", "Add two integers"),
+        ("word_count", "Count words in text"),
+    ]
+
+
+def test_tool_arguments_error_preserves_validation_error() -> None:
+    registry = ToolRegistry()
+    registry.register(
+        "add",
+        "Add two integers",
+        add,
+        AddArguments,
+    )
+
+    with pytest.raises(ToolArgumentsError) as exception_info:
+        registry.call(
+            "add",
+            {"a": "not-an-integer", "b": 3},
+        )
+
+    assert isinstance(
+        exception_info.value.__cause__,
+        ValidationError,
+    )
