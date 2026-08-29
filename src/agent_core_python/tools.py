@@ -2,7 +2,7 @@ from collections.abc import Callable
 
 from pydantic import BaseModel, ValidationError
 
-from .models import RegisteredTool
+from .models import RegisteredTool, ToolCall, ToolResult
 
 
 class ToolNotFoundError(Exception):
@@ -56,6 +56,16 @@ class ToolRegistry:
         except ValidationError as error:
             raise ToolArgumentsError(f"Invalid arguments for tool: {name}") from error
         return registered_tool.function(**validated_arguments.model_dump())
+
+    def execute(self, tool_call: ToolCall) -> ToolResult:
+        output = self.call(
+            tool_call.name,
+            tool_call.arguments,
+        )
+        return ToolResult(
+            tool_name=tool_call.name,
+            output=output,
+        )
 
     def list_tools(self) -> list[dict[str, object]]:
         return [

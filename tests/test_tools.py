@@ -4,6 +4,7 @@ from typing import cast
 import pytest
 from pydantic import BaseModel, ConfigDict, ValidationError
 
+from agent_core_python.models import ToolCall, ToolResult
 from agent_core_python.tools import (
     DuplicateToolError,
     ToolArgumentsError,
@@ -226,3 +227,62 @@ def test_tool_arguments_error_preserves_validation_error() -> None:
         exception_info.value.__cause__,
         ValidationError,
     )
+
+
+def test_execute_returns_tool_result() -> None:
+    registry = ToolRegistry()
+    registry.register(
+        "add",
+        "Add two integers",
+        add,
+        AddArguments,
+    )
+    tool_call = ToolCall(
+        name="add",
+        arguments={"a": "2", "b": 3},
+    )
+
+    result = registry.execute(tool_call)
+
+    assert isinstance(result, ToolResult)
+    assert result.tool_name == "add"
+    assert result.output == 5
+
+
+def test_execute_unknown_tool_raises_error() -> None:
+    registry = ToolRegistry()
+    tool_call = ToolCall(
+        name="missing",
+        arguments={},
+    )
+
+    with pytest.raises(ToolNotFoundError):
+        registry.execute(tool_call)
+
+
+def test_execute_invalid_arguments_raises_error() -> None:
+    registry = ToolRegistry()
+    registry.register(
+        "add",
+        "Add two integers",
+        add,
+        AddArguments,
+    )
+    tool_call = ToolCall(
+        name="add",
+        arguments={"a": "not-an-integer", "b": 3},
+    )
+
+    with pytest.raises(ToolArgumentsError):
+        registry.execute(tool_call)
+
+
+def test_tool_call_rejects_extra_fields() -> None:
+    raw_tool_call = {
+        "name": "add",
+        "arguments": {"a": 2, "b": 3},
+        "unexpected": True,
+    }
+
+    with pytest.raises(ValidationError):
+        ToolCall.model_validate(raw_tool_call)
